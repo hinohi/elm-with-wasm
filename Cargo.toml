@@ -1,0 +1,7 @@
+[package]
+name = "elm-wasm-test"
+version = "0.1.0"
+authors = ["Daiju Nakayama <daiju.nakayama@pixiedusttech.com>"]
+edition = "2018"
+
+[dependencies]
