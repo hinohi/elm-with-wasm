@@ -5,3 +5,9 @@ Cargo.lock
 
 # jet brains
 .idea
+node_modules
+
+# ohter
+dist
+node_modules
+pkg
