@@ -6,10 +6,15 @@ const app = Elm.Main.init({
 
 async function run() {
     let wasm = await rust;
-    app.ports.send.subscribe(args => {
+    app.ports.sendAdd.subscribe(args => {
             let [a, b] = args;
             let ans = wasm.add(a, b);
-            app.ports.rev.send(ans);
+            app.ports.revAdd.send(ans);
+        }
+    );
+    app.ports.sendPrime.subscribe(args => {
+            let ans = wasm.is_prime(args);
+            app.ports.revPrime.send(ans);
         }
     );
 }
