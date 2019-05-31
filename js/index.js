@@ -1,4 +1,4 @@
-const rust = import('./pkg/elm_wasm_test');
+const rust = import('../pkg/elm_wasm_test');
 
 const app = Elm.Main.init({
     node: document.getElementById('elm'),
