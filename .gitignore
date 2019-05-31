@@ -2,12 +2,16 @@
 /target
 **/*.rs.bk
 Cargo.lock
+pkg
 
 # jet brains
 .idea
 node_modules
 
-# ohter
+# node
 dist
 node_modules
-pkg
+
+# Elm
+elm-stuff
+elm.js
