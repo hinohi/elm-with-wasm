@@ -3,10 +3,15 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
-module.exports = {
+const distPath = path.resolve(__dirname, 'dist');
+
+const WORKER_PATH = '/worker.js';
+
+
+const appConfig = {
     entry: './js/index.js',
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: distPath,
         filename: 'index.js',
     },
     plugins: [
@@ -16,12 +21,21 @@ module.exports = {
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname, ".")
         }),
-        // Have this example work in Edge which doesn't ship `TextEncoder` or
-        // `TextDecoder` at this time.
-        new webpack.ProvidePlugin({
-          TextDecoder: ['text-encoding', 'TextDecoder'],
-          TextEncoder: ['text-encoding', 'TextEncoder']
-        })
+        new webpack.DefinePlugin({
+            WORKER_PATH: JSON.stringify(WORKER_PATH),
+        }),
     ],
     mode: 'development'
 };
+
+const workerConfig = {
+    target: 'webworker',
+    entry: './js/worker.js',
+    output: {
+        path: distPath,
+        filename: 'worker.js',
+    },
+    mode: 'development'
+};
+
+module.exports = [appConfig, workerConfig];

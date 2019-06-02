@@ -1,22 +1,25 @@
-const rust = import('../pkg/elm_wasm_test');
+const worker = new Worker(WORKER_PATH);
 
 const app = Elm.Main.init({
     node: document.getElementById('elm'),
 });
 
+const ADD = 'add';
+const PRIME = 'is_prime';
+
 async function run() {
-    let wasm = await rust;
-    app.ports.sendAdd.subscribe(args => {
-            let [a, b] = args;
-            let ans = wasm.add(a, b);
+    worker.onmessage = function(e) {
+        console.log(e);
+        let [func, ans] = e.data;
+        if (func === ADD) {
             app.ports.revAdd.send(ans);
-        }
-    );
-    app.ports.sendPrime.subscribe(args => {
-            let ans = wasm.is_prime(args);
+        } else if (func === PRIME) {
             app.ports.revPrime.send(ans);
         }
-    );
+    };
+    app.ports.sendAdd.subscribe(args => worker.postMessage([ADD, args]));
+    app.ports.sendPrime.subscribe(args => worker.postMessage([PRIME, [args]]));
+
 }
 
 run().catch(console.error);

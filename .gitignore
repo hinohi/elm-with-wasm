@@ -3,6 +3,9 @@
 **/*.rs.bk
 Cargo.lock
 pkg
+.crates.toml
+bin
+wasm-pack.log
 
 # jet brains
 .idea
