@@ -9,7 +9,6 @@ const PRIME = 'is_prime';
 
 async function run() {
     worker.onmessage = function(e) {
-        console.log(e);
         let [func, ans] = e.data;
         if (func === ADD) {
             app.ports.revAdd.send(ans);

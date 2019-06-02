@@ -40,18 +40,24 @@ main =
 -- Model
 
 
+type Ans a
+    = NoAns
+    | Pending
+    | Ans a
+
+
 type alias Model =
     { a : String
     , b : String
-    , ans : Maybe Float
+    , add : Ans Float
     , n : String
-    , is_prime : Maybe Bool
+    , is_prime : Ans Bool
     }
 
 
 init : () -> ( Model, Cmd msg )
 init _ =
-    ( Model "" "" Nothing "" Nothing, Cmd.none )
+    ( Model "" "" NoAns "" NoAns, Cmd.none )
 
 
 
@@ -70,38 +76,60 @@ update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         ChangeA s ->
-            ( { model | a = s, ans = Nothing }, sendPortAdd s model.b )
+            let
+                ( cmd, post ) =
+                    sendPortAdd s model.b
+            in
+            ( { model | a = s, add = post }, cmd )
 
         ChangeB s ->
-            ( { model | b = s, ans = Nothing }, sendPortAdd model.a s )
+            let
+                ( cmd, post ) =
+                    sendPortAdd model.a s
+            in
+            ( { model | b = s, add = post }, cmd )
 
         GetAns ans ->
-            ( { model | ans = Just ans }, Cmd.none )
+            ( { model | add = Ans ans }, Cmd.none )
 
         ChangeN s ->
-            ( { model | n = s, is_prime = Nothing }, sendPortPrime s )
+            let
+                ( cmd, post ) =
+                    sendPortPrime s
+            in
+            case model.is_prime of
+                Pending ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( { model | n = s, is_prime = post }, cmd )
 
         GetPrime b ->
-            ( { model | is_prime = Just b }, Cmd.none )
+            ( { model | is_prime = Ans b }, Cmd.none )
 
 
-sendPortAdd : String -> String -> Cmd msg
+sendPortAdd : String -> String -> ( Cmd msg, Ans Float )
 sendPortAdd a b =
     let
         toFloat : String -> Maybe Encode.Value
         toFloat v =
             Maybe.map Encode.float (String.toFloat v)
     in
-    Maybe.withDefault Cmd.none <| Maybe.map sendAdd (Maybe.map2 Tuple.pair (toFloat a) (toFloat b))
+    case Maybe.map sendAdd (Maybe.map2 Tuple.pair (toFloat a) (toFloat b)) of
+        Just pair ->
+            ( pair, Pending )
+
+        Nothing ->
+            ( Cmd.none, NoAns )
 
 
-sendPortPrime : String -> Cmd msg
+sendPortPrime : String -> ( Cmd msg, Ans Bool )
 sendPortPrime s =
     if not (String.isEmpty s) && (String.toList s |> List.all Char.isDigit) then
-        sendPrime (Encode.string s)
+        ( sendPrime (Encode.string s), Pending )
 
     else
-        Cmd.none
+        ( Cmd.none, NoAns )
 
 
 subscriptions : Model -> Sub Msg
@@ -117,24 +145,30 @@ view : Model -> Html Msg
 view model =
     let
         viewAns =
-            case model.ans of
-                Just ans ->
-                    text (String.fromFloat ans)
-
-                Nothing ->
+            case model.add of
+                NoAns ->
                     text ""
+
+                Pending ->
+                    text "??"
+
+                Ans ans ->
+                    text (String.fromFloat ans)
 
         viewPrime =
             case model.is_prime of
-                Just b ->
+                Ans b ->
                     if b then
-                        text "is a prime!"
+                        text " is a prime!"
 
                     else
-                        text "is not a prime"
+                        text " is not a prime"
 
-                Nothing ->
-                    text "is not a number"
+                NoAns ->
+                    text " is not a number"
+
+                Pending ->
+                    text " calculating..."
     in
     div []
         [ div []
